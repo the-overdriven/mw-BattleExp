@@ -1,4 +1,4 @@
-local DEBUG = true
+local DEBUG = false
 
 local nearby = require('openmw.nearby')
 local types = require('openmw.types')
@@ -8,9 +8,9 @@ local I = require('openmw.interfaces')
 local lastAttacker = nil
 
 I.Combat.addOnHitHandler(function(attack)
-  if DEBUG then print('[BattleExp] addOnHitHandler') end
+  -- if DEBUG then print('[BattleExp] addOnHitHandler') end
   if attack.attacker then
-    if DEBUG then print('[BattleExp] attacker registered') end
+    -- if DEBUG then print('[BattleExp] attacker registered') end
     lastAttacker = attack.attacker
   end
 end)
@@ -36,7 +36,7 @@ return {
   eventHandlers = {
     Died = function()
       local enemyName = getEnemyName(self.object)
-      if DEBUG then print(string.format('[BattleExp] Died fired for %s', tostring(enemyName))) end
+      if DEBUG then print(string.format('[BattleExp] "Died" event fired for %s', tostring(enemyName))) end
       if not lastAttacker then
         if DEBUG then print('[BattleExp] No lastAttacker!') end
         return
@@ -46,8 +46,8 @@ return {
         return
       end
       local isPlayer = types.Player.objectIsInstance(lastAttacker)
-      if DEBUG then print(string.format('[BattleExp] Killer isPlayer: %s', tostring(isPlayer))) end
       local isAlly = not isPlayer and isPlayerAlly(lastAttacker)
+      if DEBUG then print(string.format('[BattleExp] Killer isPlayer: %s', tostring(isPlayer))) end
       if DEBUG then print(string.format('[BattleExp] Killer isAlly: %s', tostring(isAlly))) end
       if not isPlayer and not isAlly then
         if DEBUG then print('[BattleExp] Killer is not player or ally, skipping...') end

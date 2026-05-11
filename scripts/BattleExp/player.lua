@@ -1,4 +1,4 @@
-local DEBUG = true
+local DEBUG = false
 
 -- useful commands for testing:
 -- reloadlua
@@ -39,7 +39,7 @@ local function getScaledXP(currentSkillLevel, xp)
 
   if DEBUG then
     print(string.format(
-      '[BattleExp] currentSkillLevel: %.2f, xp: %.2f, xp scaled: %.2f, ', 
+      '[BattleExp] currentSkillLevel: %s, xp: %.2f, xp scaled: %.2f', 
       currentSkillLevel, 
       xp,
       xp * scale
@@ -79,13 +79,12 @@ local function setHealthFromEndurance()
   local newMaxHP = calcMaxHP(e)
   local health = types.Actor.stats.dynamic.health(selfObj)
   health.base = newMaxHP
-  if DEBUG then print(string.format('[BattleExp] Endurance=%d -> MaxHP=%.1f', e, newMaxHP)) end
+  -- if DEBUG then print(string.format('[BattleExp] Endurance=%d -> MaxHP=%.1f', e, newMaxHP)) end
 end
 
 -- hide character level in char sheet
 local API = require('openmw.interfaces').StatsWindow
 local C = API.Constants
-
 API.modifyLine(C.DefaultLines.LEVEL, {
   visibleFn = function() return false end,
 })
@@ -93,7 +92,7 @@ API.modifyLine(C.DefaultLines.LEVEL, {
 -- prevent leveling up character
 local SP = require('openmw.interfaces').SkillProgression
 SP.addSkillLevelUpHandler(function(skillId, source, options)
-  options.levelUpProgress = nil
+  options.levelUpProgress = 0
 end)
 
 return {
@@ -152,7 +151,7 @@ return {
         local levelAfter = SF.getSkillStat(skillId).base
         local levelsGained = levelAfter - levelBefore
 
-        growEndurance(levelsGained)  -- +1 Endurance per skill level gained
+        growEndurance(levelsGained) -- +1 Endurance per skill level gained
         setHealthFromEndurance()
       else
         -- no skill level up
@@ -169,7 +168,3 @@ return {
 
 -- TODO:
 -- detect player's summons as killers - even possible?
-
--- check:
--- disabled character levelling rly works?
--- attribute grow?

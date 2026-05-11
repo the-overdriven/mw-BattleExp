@@ -3,7 +3,7 @@ local DEBUG = true
 -- useful commands for testing:
 -- reloadlua
 -- luap / exit()
--- I.SkillFramework.skillLevelUp("battle_experience")
+-- I.SkillFramework.skillLevelUp('battle_experience')
 
 local ui = require('openmw.ui')
 local I = require('openmw.interfaces')
@@ -12,17 +12,17 @@ local selfObj = require('openmw.self')
 local SF = require('openmw.interfaces').SkillFramework
 
 if not SF then
-    error("[BattleExp] Skill Framework is not loaded! Make sure it is installed and enabled.")
+    error('[BattleExp] Skill Framework is not loaded! Make sure it is installed and enabled.')
 end
 
 local skillId = 'battle_experience'
 local useTypes = { Kill = 1 }
 
 SF.registerSkill(skillId, {
-    name = "Battle Experience",
-    description = "Hard-earned combat experience, forged in the ashes of slain foes.",
-    icon = { fgr = "icons/k/Attribute_Endurance.dds" },
-    attribute = "endurance",
+    name = 'Battle Experience',
+    description = 'Hard-earned combat experience, forged in the ashes of slain foes.',
+    icon = { fgr = 'icons/k/Attribute_Endurance.dds' },
+    attribute = 'endurance',
     specialization = SF.SPECIALIZATION.Combat,
     skillGain = {
         [useTypes.Kill] = 0.1 -- Amount of XP gained per kill (default)
@@ -39,7 +39,7 @@ local function getScaledXP(currentSkillLevel, xp)
 
     if DEBUG then
         print(string.format(
-            "[BattleExp] currentSkillLevel: %.2f, xp: %.2f, xp scaled: %.2f, ", 
+            '[BattleExp] currentSkillLevel: %.2f, xp: %.2f, xp scaled: %.2f, ', 
             currentSkillLevel, 
             xp,
             xp * scale
@@ -60,7 +60,7 @@ local function growEndurance(amount)
     local endurance = types.Actor.stats.attributes.endurance(selfObj)
     local newVal = endurance.base + amount
     endurance.base = newVal
-    if DEBUG then print(string.format("[BattleExp] Endurance increased to %d", newVal)) end
+    if DEBUG then print(string.format('[BattleExp] Endurance increased to %d', newVal)) end
 end
 
 -- HP formula: e + (e^2 / 100)
@@ -79,7 +79,7 @@ local function setHealthFromEndurance()
     local newMaxHP = calcMaxHP(e)
     local health = types.Actor.stats.dynamic.health(selfObj)
     health.base = newMaxHP
-    if DEBUG then print(string.format("[BattleExp] Endurance=%d -> MaxHP=%.1f", e, newMaxHP)) end
+    if DEBUG then print(string.format('[BattleExp] Endurance=%d -> MaxHP=%.1f', e, newMaxHP)) end
 end
 
 -- hide character level in char sheet
@@ -125,8 +125,8 @@ return {
 
             local xpNeededToLevelUp = reqForCurentLevel - currentProgress
 
-            if DEBUG then print(string.format("[BattleExp] defeated %s", tostring(enemyName))) end
-            if DEBUG then print(string.format("[BattleExp] xpNeededToLevelUp %s", tostring(xpNeededToLevelUp))) end
+            if DEBUG then print(string.format('[BattleExp] defeated %s', tostring(enemyName))) end
+            if DEBUG then print(string.format('[BattleExp] xpNeededToLevelUp %s', tostring(xpNeededToLevelUp))) end
 
             local proportionalExp = enemyLevel * baseExpFactor
             local proportionalExpScaled = getScaledXP(stat.base, proportionalExp)
@@ -162,7 +162,7 @@ return {
                 })
             end
 
-            ui.showMessage(string.format("%s defeated (+%.1f XP)", enemyName, proportionalExp))
+            ui.showMessage(string.format('%s defeated (+%.1f XP)', enemyName, proportionalExp))
         end
     }
 }

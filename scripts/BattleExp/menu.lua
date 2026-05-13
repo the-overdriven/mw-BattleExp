@@ -30,8 +30,8 @@ I.Settings.registerGroup({
         },
         {
             key         = 'userBattleExpScale',
-            name        = 'Battle Experience progress scaling',
-            description = 'A higher percentage means faster leveling (1% - slowest, 100% - default, 1000% - fastest)',
+            name        = 'Battle Experience progress scaling (%)',
+            description = 'A higher percentage means faster leveling \n(1% - slowest, 100% - default, 1000% - fastest)',
             renderer    = 'number',
             integer     = true,
             default     = 100,
@@ -42,7 +42,7 @@ I.Settings.registerGroup({
             key         = 'showXpNotifications',
             renderer    = 'checkbox',
             name        = 'Show "defeated" notifications',
-            description = 'Displays "defeated" notifications after killing enemy.',
+            description = 'Displays a "defeated" notification after each killed enemy.',
             default     = true,
         },
         {
@@ -63,7 +63,7 @@ I.Settings.registerGroup({
             key         = 'synergicTraining',
             renderer    = 'checkbox',
             name        = 'Synergic training',
-            description = 'Training with any melee weapon slightly improves proficiency with all others.',
+            description = 'Using any melee weapon slightly improves proficiency with all others (until 50 skill lvl).',
             default     = false,
         },
     },

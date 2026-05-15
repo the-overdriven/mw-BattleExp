@@ -45,17 +45,17 @@ return {
         if DEBUG then print('[BattleExp] lastAttacker not valid!') end
         return
       end
-      local isPlayer = types.Player.objectIsInstance(lastAttacker)
-      local isAlly = not isPlayer and isPlayerAlly(lastAttacker)
-      if DEBUG then print(string.format('[BattleExp] Killer isPlayer: %s', tostring(isPlayer))) end
-      if DEBUG then print(string.format('[BattleExp] Killer isAlly: %s', tostring(isAlly))) end
-      if not isPlayer and not isAlly then
+      local isKillerPlayer = types.Player.objectIsInstance(lastAttacker)
+      local isKillerPlayerAlly = not isKillerPlayer and isKillerPlayerAlly(lastAttacker)
+      if DEBUG then print(string.format('[BattleExp] isKillerPlayer: %s', tostring(isKillerPlayer))) end
+      if DEBUG then print(string.format('[BattleExp] isKillerPlayerAlly: %s', tostring(isKillerPlayerAlly))) end
+      if not isKillerPlayer and not isKillerPlayerAlly then
         if DEBUG then print('[BattleExp] Killer is not player or ally, skipping...') end
         return
       end
       local enemyLevel = types.Actor.stats.level(self.object).current
       local payload = { level = enemyLevel, name = enemyName }
-      if isPlayer then
+      if isKillerPlayer then
         lastAttacker:sendEvent('GrantBattleExp', payload)
       else
         for _, actor in ipairs(nearby.actors) do

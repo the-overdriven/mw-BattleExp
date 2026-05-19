@@ -214,6 +214,7 @@ local function getItemEnchantment(item)
 end
 
 local function GrantBattleExp(data)
+  if DEBUG then print('GrantBattleExp') end
   local enemyLevel = data and data.level or 1
   local enemyName = data and data.name
   local baseExpFactor = 0.1
@@ -339,6 +340,7 @@ return {
       local timeNow = os.time()
       local hasUsedDestructiveMagicInLastMinute = timeNow - timeLastDestructiveMagicUse < 60
       if not hasUsedDestructiveMagicInLastMinute then return end
+      if DEBUG then print('GrantBattleExpConditionally') end
       GrantBattleExp(data)
     end,
     GrantBattleExp = GrantBattleExp,

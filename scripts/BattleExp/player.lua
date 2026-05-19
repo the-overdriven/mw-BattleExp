@@ -12,6 +12,7 @@ local player = require('openmw.self')
 local SF = require('openmw.interfaces').SkillFramework
 local storage = require('openmw.storage')
 local settings = storage.playerSection('SettingsBattleExp')
+local core = require('openmw.core')
 
 if not SF then
   error('[BattleExp] Skill Framework is not loaded! Make sure it is installed and enabled.')
@@ -111,13 +112,6 @@ local meleeSkills = {
   spear = true
 }
 
--- Magic schools that indicate the player may have caused a kill using magic.
--- Destruction covers direct damage spells; enchant covers enchanted item usage.
-local magicKillSkills = {
-  destruction = true,
-  enchant = true,
-}
-
 local SP = require('openmw.interfaces').SkillProgression
 SP.addSkillLevelUpHandler(function(skillId, source, options)
   -- prevent leveling up character  
@@ -134,11 +128,6 @@ SP.addSkillUsedHandler(function(skillId, params)
   if skillId == 'destruction' then
     timeLastDestructiveMagicUse = timeNow
     if DEBUG then print(string.format('[BattleExp] Destruction used, timestamp: %d', timeNow)) end
-  elseif skillId == 'enchant' and params and params.useType == 1 then
-    -- use magic item
-    local timeNow = os.time()
-    timeLastDestructiveMagicUse = timeNow
-    if DEBUG then print(string.format('[BattleExp] Enchant item used, timestamp: %d', timeNow))
   end
 
   if not meleeSkills[skillId] then return end
@@ -209,6 +198,21 @@ local function formatDisplayedExp(xp)
   return trimZeros(num)
 end
 
+local function getItemRecord(item)
+  if item.type and item.type.record then
+    return item.type.record(item)
+  end
+  return nil
+end
+
+local function getItemEnchantment(item)
+  local record = getItemRecord(item)
+  if record and record.enchant then
+    return core.magic.enchantments.records[record.enchant]
+  end
+  return nil
+end
+
 local function GrantBattleExp(data)
   local enemyLevel = data and data.level or 1
   local enemyName = data and data.name
@@ -271,6 +275,56 @@ return {
     end,
     onActive = function()
       setHealthFromEndurance()
+    end,
+    onInputAction = function(id)
+      -- we need to track destructive enchanted items and spell scrolls used in magic stance
+      -- (needed for cases when killer is unknown)
+      local input = require('openmw.input')
+      local self = require('openmw.self')
+      local types = require('openmw.types')
+      
+      if id ~= input.ACTION.Use then return end
+
+      if DEBUG then print('[BattleExp] Player pressed attack/use key') end
+
+      if types.Actor.getStance(self) ~= types.Actor.STANCE.Spell then
+        if DEBUG then print('[BattleExp] Player was not in magic stance (R)') end
+        return
+      end
+
+      if types.Actor.getStance(self) == types.Actor.STANCE.Spell then
+        if DEBUG then print('[BattleExp] Player used enchanted item, scroll or spell') end
+        local spell = types.Actor.getSelectedSpell(self)
+        local item = types.Actor.getSelectedEnchantedItem(self)
+
+        if spell then
+          if DEBUG then print('[BattleExp] Player used spell') end
+          return
+        end
+
+        if item then
+          if DEBUG then print('[BattleExp] Player used enchanted item or scroll') end
+        end
+
+        if DEBUG then print('[BattleExp] item.recordId: %s', tostring(item.recordId)) end
+
+        local enchantment = getItemEnchantment(item)
+        if enchantment then
+          for _, effect in pairs(enchantment.effects) do
+              local magicEffect = core.magic.effects.records[effect.id]
+              local magicSchool = magicEffect.school
+              if DEBUG then print('[BattleExp] magic effect id: ' .. effect.id) end
+              if DEBUG then print('[BattleExp] magic effect school: %s', magicSchool) end
+
+              if magicSchool == 'destruction' then
+                if DEBUG then print('[BattleExp] Player wrecks havoc with magic item or scroll') end
+                local timeNow = os.time()
+                timeLastDestructiveMagicUse = timeNow
+              break
+            end
+          end
+        end
+      end
     end
   },
   eventHandlers = {

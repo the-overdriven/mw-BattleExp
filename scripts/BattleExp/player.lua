@@ -306,7 +306,7 @@ return {
           if DEBUG then print('[BattleExp] Player used enchanted item or scroll') end
         end
 
-        if DEBUG then print('[BattleExp] item.recordId: %s', tostring(item.recordId)) end
+        if DEBUG then print('[BattleExp] item.recordId: ', tostring(item.recordId)) end
 
         local enchantment = getItemEnchantment(item)
         if enchantment then
@@ -314,7 +314,7 @@ return {
               local magicEffect = core.magic.effects.records[effect.id]
               local magicSchool = magicEffect.school
               if DEBUG then print('[BattleExp] magic effect id: ' .. effect.id) end
-              if DEBUG then print('[BattleExp] magic effect school: %s', magicSchool) end
+              if DEBUG then print('[BattleExp] magic effect school: ', magicSchool) end
 
               if magicSchool == 'destruction' then
                 if DEBUG then print('[BattleExp] Player wrecks havoc with magic item or scroll') end

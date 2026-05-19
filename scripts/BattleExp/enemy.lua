@@ -50,7 +50,7 @@ local function checkAndCachePlayerSummon()
   local creatureName = tostring(getActorName(self.object))
   local recordId = self.recordId
 
-  log('checkAndCachePlayerSummon')
+  log('new creature has just spawned')
   log('creature (self.recordId): %s', tostring(recordId))
   log('creature name: %s', creatureName)
 
@@ -105,7 +105,7 @@ end
 I.Combat.addOnHitHandler(function(attack)
   log('addOnHitHandler')
   if attack.attacker then
-    log('attacker registered: %s', getActorName(attack.attacker))
+    log('%s was hit by %s', getActorName(self.object), getActorName(attack.attacker))
     lastAttacker = attack.attacker
   end
 end)
@@ -149,7 +149,7 @@ return {
         return
       end
       log(string.format('lastAttacker: %s', tostring(getActorName(lastAttacker))))
-      
+
       local isKillerPlayer = types.Player.objectIsInstance(lastAttacker)
       local isKillerPlayerAlly = not isKillerPlayer and isPlayerAlly(lastAttacker)
       log(string.format('isKillerPlayer: %s', tostring(isKillerPlayer)))

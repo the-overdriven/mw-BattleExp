@@ -1,5 +1,3 @@
-local DEBUG = true
-
 -- useful commands for testing:
 -- reloadlua
 -- luap / exit()
@@ -13,6 +11,9 @@ local SF = require('openmw.interfaces').SkillFramework
 local storage = require('openmw.storage')
 local settings = storage.playerSection('SettingsBattleExp')
 local core = require('openmw.core')
+
+local H = require('scripts/BattleExp/helpers')
+local log = H.log
 
 if not SF then
   error('[BattleExp] Skill Framework is not loaded! Make sure it is installed and enabled.')
@@ -49,15 +50,8 @@ local function getScaledExp(currentSkillLevel, xp)
 
   local userScaledExp = scaledExp * userScale
 
-  if DEBUG then
-    print(string.format(
-      '[BattleExp] XP scaling. currentSkillLevel: %s, xp: %.2f, scaledExp: %.4f, userScaledExp: %.4f',
-      currentSkillLevel, 
-      xp,
-      scaledExp,
-      userScaledExp
-    ))
-  end
+  log('XP scaling. currentSkillLevel: %s, xp: %.2f, scaledExp: %.4f, userScaledExp: %.4f',
+    currentSkillLevel, xp, scaledExp, userScaledExp)
 
   return userScaledExp
 end
@@ -73,7 +67,7 @@ local function growEndurance(amount)
   local endurance = types.Actor.stats.attributes.endurance(player)
   local newVal = endurance.base + amount
   endurance.base = newVal
-  if DEBUG then print(string.format('[BattleExp] Endurance increased to %d', newVal)) end
+  log('Endurance increased to %d due to BattleExp', newVal)
 end
 
 -- HP formula: e + (e^2 / 100)
@@ -92,7 +86,7 @@ local function setHealthFromEndurance()
   local newMaxHP = calcMaxHP(e)
   local health = types.Actor.stats.dynamic.health(player)
   health.base = newMaxHP
-  -- if DEBUG then print(string.format('[BattleExp] Endurance=%d -> MaxHP=%.1f', e, newMaxHP)) end
+  -- log('Endurance=%d -> MaxHP=%.1f', e, newMaxHP)
 end
 
 -- hide character level in char sheet
@@ -121,28 +115,28 @@ SP.addSkillLevelUpHandler(function(skillId, source, options)
 end)
 
 SP.addSkillUsedHandler(function(skillId, params)
-  -- Track Destruction and Enchant XP gains as a proxy for player-caused magic damage.
+  -- Track Destruction XP gains as a proxy for player-caused magic damage.
   -- When an enemy dies with an unknown killer, we check these timestamps to decide
   -- whether the player was likely responsible (within the last 60 seconds).
   local timeNow = os.time()
   if skillId == 'destruction' then
     timeLastDestructiveMagicUse = timeNow
-    if DEBUG then print(string.format('[BattleExp] Destruction used, timestamp: %d', timeNow)) end
+    log('Destruction spell used, timestamp: %d', timeNow)
   end
 
   if not meleeSkills[skillId] then return end
 
-  -- reward melee fighters with small bonus for every hit  
+  -- reward melee fighters with small BattleExp bonus for every hit  
   if settings:get('rewardMelee') then
     local meleeBonusExp = getScaledExp(statBattleExp.base, 0.01)
-    if DEBUG then print('[BattleExp] Rewarded Melee use!', meleeBonusExp) end
+    log('Rewarded Melee use! %s', meleeBonusExp)
     SF.skillUsed(skillIdBattleExp, {
       skillGain = meleeBonusExp,
       useType = useTypes.Kill
     })
   end
 
-  -- reward all other melee skills for using a melee skill
+  -- slightly increase all other melee skills for using a melee skill
   if settings:get('synergicTraining') then
     for otherSkillId, _ in pairs(meleeSkills) do
       if otherSkillId ~= skillId then
@@ -158,7 +152,8 @@ SP.addSkillUsedHandler(function(skillId, params)
         -- Level 49: ≈ 0.00052 (0.05%)
         local synergicExpProgressBonus = 0.05 * (5 / otherSkillLevel) ^ 2
 
-        if DEBUG then print(string.format('[BattleExp] synergically training: %s (level: %s, progress: %s, bonus: %s)', otherSkillId, otherSkillLevel, otherSkill.progress, synergicExpProgressBonus)) end
+        log('synergically training: %s (level: %s, progress: %s, bonus: %s)', 
+          otherSkillId, otherSkillLevel, otherSkill.progress, synergicExpProgressBonus)
 
         if otherSkill.progress + synergicExpProgressBonus >= 1 then
           -- granting xp would trigger a level up
@@ -214,7 +209,7 @@ local function getItemEnchantment(item)
 end
 
 local function GrantBattleExp(data)
-  if DEBUG then print('GrantBattleExp') end
+  log('GrantBattleExp')
   local enemyLevel = data and data.level or 1
   local enemyName = data and data.name
   local baseExpFactor = 0.1
@@ -226,7 +221,7 @@ local function GrantBattleExp(data)
 
   local xpNeededToLevelUp = reqForCurentLevel - currentProgress
 
-  if DEBUG then print(string.format('[BattleExp] xpNeededToLevelUp %s', tostring(xpNeededToLevelUp))) end
+  log('xpNeededToLevelUp: %s', tostring(xpNeededToLevelUp))
 
   local proportionalExp = enemyLevel * baseExpFactor
   local proportionalExpScaled = getScaledExp(statBattleExp.base, proportionalExp)
@@ -286,39 +281,39 @@ return {
       
       if id ~= input.ACTION.Use then return end
 
-      if DEBUG then print('[BattleExp] Player pressed attack/use key') end
+      log('Player pressed attack/use key')
 
       if types.Actor.getStance(self) ~= types.Actor.STANCE.Spell then
-        if DEBUG then print('[BattleExp] Player was not in magic stance (R)') end
+        log('Player was not in magic stance (R)')
         return
       end
 
       if types.Actor.getStance(self) == types.Actor.STANCE.Spell then
-        if DEBUG then print('[BattleExp] Player used enchanted item, scroll or spell') end
+        log('Player used enchanted item, scroll or spell')
         local spell = types.Actor.getSelectedSpell(self)
         local item = types.Actor.getSelectedEnchantedItem(self)
 
         if spell then
-          if DEBUG then print('[BattleExp] Player used spell') end
+          log('Player used spell')
           return
         end
 
         if item then
-          if DEBUG then print('[BattleExp] Player used enchanted item or scroll') end
+          log('Player used enchanted item or scroll')
         end
 
-        if DEBUG then print('[BattleExp] item.recordId: ', tostring(item.recordId)) end
+        log('item.recordId: %s', tostring(item.recordId))
 
         local enchantment = getItemEnchantment(item)
         if enchantment then
           for _, effect in pairs(enchantment.effects) do
               local magicEffect = core.magic.effects.records[effect.id]
               local magicSchool = magicEffect.school
-              if DEBUG then print('[BattleExp] magic effect id: ' .. effect.id) end
-              if DEBUG then print('[BattleExp] magic effect school: ', magicSchool) end
+              log('magic effect id: %s', effect.id)
+              log('magic effect school: %s', magicSchool)
 
               if magicSchool == 'destruction' then
-                if DEBUG then print('[BattleExp] Player wrecks havoc with magic item or scroll') end
+                log('Player wrecks havoc with magic item or scroll')
                 local timeNow = os.time()
                 timeLastDestructiveMagicUse = timeNow
               break
@@ -340,7 +335,7 @@ return {
       local timeNow = os.time()
       local hasUsedDestructiveMagicInLastMinute = timeNow - timeLastDestructiveMagicUse < 60
       if not hasUsedDestructiveMagicInLastMinute then return end
-      if DEBUG then print('GrantBattleExpConditionally') end
+      log('GrantBattleExpConditionally (player used destructive magic in last minute)')
       GrantBattleExp(data)
     end,
     GrantBattleExp = GrantBattleExp,
@@ -348,5 +343,4 @@ return {
 }
 
 -- TODO:
--- detect player's summons as killers - even possible?
 -- level armor while moving (like MWSE Armor Training)

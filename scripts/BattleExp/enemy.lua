@@ -31,7 +31,7 @@ local function getPlayerActiveSummonEffects(playerObj)
   return summonEffects
 end
 
-local function getEnemyName(object)
+local function getActorName(object)
   if types.NPC.objectIsInstance(object) then
     return types.NPC.record(object).name
   elseif types.Creature.objectIsInstance(object) then
@@ -47,7 +47,7 @@ local function checkAndCachePlayerSummon()
     return
   end
 
-  local creatureName = tostring(getEnemyName(self.object))
+  local creatureName = tostring(getActorName(self.object))
   local recordId = self.recordId
 
   log('checkAndCachePlayerSummon')
@@ -76,7 +76,7 @@ local function checkAndCachePlayerSummon()
     end
 
     for key, value in pairs(playerSummonEffects) do
-      log('player has active summon spell: %s', tostring(value))
+      log('player has active summon spell: %s', tostring(key))
     end
 
     if playerSummonEffects[creatureName] then
@@ -105,14 +105,14 @@ end
 I.Combat.addOnHitHandler(function(attack)
   log('addOnHitHandler')
   if attack.attacker then
-    log('attacker registered: %s', tostring(attack.attacker))
+    log('attacker registered: %s', getActorName(attack.attacker))
     lastAttacker = attack.attacker
   end
 end)
 
 local function isPlayerAlly(actor)
   if summons:get(actor.id) then 
-    log('The killer, %s is player\'s summon!', actor)
+    log('The killer, %s is player\'s summon!', getActorName(actor))
     return true 
   end
 
@@ -129,7 +129,7 @@ return {
   },
   eventHandlers = {
     Died = function()
-      local enemyName = getEnemyName(self.object)
+      local enemyName = getActorName(self.object)
       local enemyLevel = types.Actor.stats.level(self.object).current
       local payload = { level = enemyLevel, name = enemyName }
       log(string.format('"Died" event fired for %s', tostring(enemyName)))
@@ -148,9 +148,10 @@ return {
         log('lastAttacker not valid!')
         return
       end
+      log(string.format('lastAttacker: %s', tostring(getActorName(lastAttacker))))
+      
       local isKillerPlayer = types.Player.objectIsInstance(lastAttacker)
       local isKillerPlayerAlly = not isKillerPlayer and isPlayerAlly(lastAttacker)
-      log(string.format('lastAttacker: %s', tostring(getEnemyName(lastAttacker))))
       log(string.format('isKillerPlayer: %s', tostring(isKillerPlayer)))
       log(string.format('isKillerPlayerAlly: %s', tostring(isKillerPlayerAlly)))
       if not isKillerPlayer and not isKillerPlayerAlly then

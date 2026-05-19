@@ -126,17 +126,19 @@ SP.addSkillLevelUpHandler(function(skillId, source, options)
   end
 end)
 
-SP.addSkillUsedHandler(function(skillId, source)
+SP.addSkillUsedHandler(function(skillId, params)
   -- Track Destruction and Enchant XP gains as a proxy for player-caused magic damage.
   -- When an enemy dies with an unknown killer, we check these timestamps to decide
   -- whether the player was likely responsible (within the last 60 seconds).
-  if skillId == 'destruction' or skillId == 'enchant' then
+  local timeNow = os.time()
+  if skillId == 'destruction' then
+    timeLastDestructiveMagicUse = timeNow
+    if DEBUG then print(string.format('[BattleExp] Destruction used, timestamp: %d', timeNow)) end
+  elseif skillId == 'enchant' and params and params.useType == 1 then
+    -- use magic item
     local timeNow = os.time()
     timeLastDestructiveMagicUse = timeNow
-    if DEBUG then
-      -- ui.showMessage(string.format('[BattleExp] %s XP gained at t=%d', skillId, timeNow))
-      print(string.format('[BattleExp] Destructive skill used (%s), timestamp: %d', skillId, timeNow)) 
-    end
+    if DEBUG then print(string.format('[BattleExp] Enchant item used, timestamp: %d', timeNow))
   end
 
   if not meleeSkills[skillId] then return end
@@ -292,3 +294,4 @@ return {
 -- TODO:
 -- detect player's summons as killers - even possible?
 -- level armor while moving (like MWSE Armor Training)
+-- what about spell scrolls?

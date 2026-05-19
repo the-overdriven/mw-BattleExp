@@ -8,7 +8,7 @@ local lastAttacker = nil
 I.Combat.addOnHitHandler(function(attack)
   if DEBUG then print('[BattleExp] addOnHitHandler') end
   if attack.attacker then
-    if DEBUG then print('[BattleExp] attacker registered (%s)', attack.attacker) end
+    if DEBUG then print('[BattleExp] attacker registered (%s)', tostring(attack.attacker)) end
     lastAttacker = attack.attacker
   end
 end)
@@ -55,6 +55,7 @@ return {
       end
       local isKillerPlayer = types.Player.objectIsInstance(lastAttacker)
       local isKillerPlayerAlly = not isKillerPlayer and isPlayerAlly(lastAttacker)
+      if DEBUG then print(string.format('[BattleExp] lastAttacker: %s', tostring(lastAttacker))) end
       if DEBUG then print(string.format('[BattleExp] isKillerPlayer: %s', tostring(isKillerPlayer))) end
       if DEBUG then print(string.format('[BattleExp] isKillerPlayerAlly: %s', tostring(isKillerPlayerAlly))) end
       if not isKillerPlayer and not isKillerPlayerAlly then

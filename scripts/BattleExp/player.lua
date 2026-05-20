@@ -10,6 +10,7 @@ local player = require('openmw.self')
 local SF = require('openmw.interfaces').SkillFramework
 local storage = require('openmw.storage')
 local core = require('openmw.core')
+-- local followers = require('openmw.storage').globalSection('PlayerFollowers')
 
 local H = require('scripts/BattleExp/helpers')
 local log = H.log
@@ -356,9 +357,12 @@ return {
       GrantBattleExp(data)
     end,
     GrantBattleExp = GrantBattleExp,
+    FDU_UpdateFollowerList = function(data)
+        log('FDU_UpdateFollowerList')
+        core.sendGlobalEvent('FDU_UpdateFollowerListFromPlayer', data)
+    end,
   }
 }
 
 -- TODO:
 -- level armor while moving (like MWSE Armor Training)
--- remove summons

@@ -6,6 +6,9 @@ local core = require('openmw.core')
 local storage = require('openmw.storage')
 local summons = storage.globalSection('BattleExpSummons')
 
+local wasFollower = I.FollowerDetectionUtil.getState().followsPlayer
+local playerFollowers = storage.globalSection('PlayerFollowers')
+
 local H = require('scripts/BattleExp/helpers')
 local log = H.log
 
@@ -120,16 +123,35 @@ I.Combat.addOnHitHandler(function(attack)
 end)
 
 local function isPlayerAlly(actor)
+  -- old way
   if summons:get(actor.id) then 
     log('The killer, %s is player\'s summon!', getActorName(actor))
-    return true 
   end
 
-  local AI = I.AI
-  if not AI then return false end
-  local package = AI.getActivePackage(actor)
-  if not package then return false end
-  return package.target and types.Player.objectIsInstance(package.target)
+  local followersAll = playerFollowers:get('all')
+  log('is %s player\'s follower? %s', getActorName(actor), followersAll and followersAll[actor.id])
+
+  if followersAll[actor.id] then
+    log('%s is player\'s follower!', getActorName(actor))
+    return true
+  end
+
+  if (wasFollower) then
+    log('%s was player\'s follower!', getActorName(actor))
+    return true
+  end
+
+  return false
+end
+
+local function updateFollowerStatus(data)
+  -- it does not update on death
+  local health = types.Actor.stats.dynamic.health(self.object).current
+  log('wasFollower updated! %s health: %s', getActorName(self.object), health)
+
+  if health > 0 then
+    wasFollower = data.followers[self.id] and data.followers[self.id].followsPlayer or false    
+  end
 end
 
 return {
@@ -137,11 +159,34 @@ return {
     onInit = checkAndCachePlayerSummon,
   },
   eventHandlers = {
+    FDU_UpdateFollowerList = updateFollowerStatus,
     Died = function()
       local enemyName = getActorName(self.object)
       local enemyLevel = types.Actor.stats.level(self.object).current
       local payload = { level = enemyLevel, name = enemyName }
       log(string.format('"Died" event fired for %s', tostring(enemyName)))
+
+      -- Display all player followers
+      log('=== All Followers ===')
+      local followersAll = playerFollowers:get('all')
+      for id, isFollower in pairs(followersAll) do
+        if isFollower then
+          log('Follower ID: %s', tostring(id))
+        end
+      end
+      log('=== End Followers ===')
+
+      if isThisActorPlayerSummon then
+        core.sendGlobalEvent('UnregisterPlayerSummon', self.object)
+        return
+      end
+
+      if isPlayerAlly(self.object) then
+        -- we don't grant xp to enemies or player for killing player allies
+        log('player ally died! we dont grant xp to anyone')
+        return
+      end
+
       if not lastAttacker then
         -- killer is unknown, maybe magic was used?
         for _, actor in ipairs(nearby.actors) do

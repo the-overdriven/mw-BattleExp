@@ -9,11 +9,14 @@ local types = require('openmw.types')
 local player = require('openmw.self')
 local SF = require('openmw.interfaces').SkillFramework
 local storage = require('openmw.storage')
-local settings = storage.playerSection('SettingsBattleExp')
 local core = require('openmw.core')
 
 local H = require('scripts/BattleExp/helpers')
 local log = H.log
+
+local settings = storage.globalSection('SettingsBattleExp')
+local DEBUG = settings:get('debug')
+H.setDebug(DEBUG)
 
 if not SF then
   error('[BattleExp] Skill Framework is not loaded! Make sure it is installed and enabled.')
@@ -344,3 +347,5 @@ return {
 
 -- TODO:
 -- level armor while moving (like MWSE Armor Training)
+-- absorb spell
+-- remove summons

@@ -9,6 +9,10 @@ local summons = storage.globalSection('BattleExpSummons')
 local H = require('scripts/BattleExp/helpers')
 local log = H.log
 
+local settings = storage.globalSection('SettingsBattleExp')
+local DEBUG = settings:get('debug')
+H.setDebug(DEBUG)
+
 local isThisActorPlayerSummon = false
 local lastAttacker = nil
 

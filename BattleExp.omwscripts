@@ -1,4 +1,5 @@
-GLOBAL: scripts/BattleExp/global.lua
-MENU: scripts/BattleExp/menu.lua
 PLAYER: scripts/BattleExp/player.lua
 NPC, CREATURE: scripts/BattleExp/enemy.lua
+
+MENU: scripts/BattleExp/menu.lua
+GLOBAL: scripts/BattleExp/menuGlobal.lua

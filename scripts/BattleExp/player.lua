@@ -296,8 +296,22 @@ return {
         local spell = types.Actor.getSelectedSpell(self)
         local item = types.Actor.getSelectedEnchantedItem(self)
 
+        -- Absorb Health from Mysticism school is destructive as well
         if spell then
-          log('Player used spell')
+          log('Player used spell %s', spell.name)
+          local spellRecord = core.magic.spells.records[spell.id]
+          if spellRecord and spellRecord.effects then
+            for i, effect in ipairs(spellRecord.effects) do
+              local magicEffect = core.magic.effects.records[effect.id]
+
+              if (magicEffect.name == 'Absorb Health') then
+                  log('it has Absorb Health effect')
+                  local timeNow = os.time()
+                  timeLastDestructiveMagicUse = timeNow
+                  break
+              end
+            end
+          end
           return
         end
 
@@ -347,5 +361,4 @@ return {
 
 -- TODO:
 -- level armor while moving (like MWSE Armor Training)
--- absorb spell
 -- remove summons

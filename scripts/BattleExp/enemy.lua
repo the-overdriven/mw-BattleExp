@@ -110,6 +110,11 @@ I.Combat.addOnHitHandler(function(attack)
   log('addOnHitHandler')
   if attack.attacker then
     log('%s was hit by %s', getActorName(self.object), getActorName(attack.attacker))
+    local playerObj = findPlayer()
+    if lastAttacker and lastAttacker.id == playerObj.id then 
+      log('player already hit this actor, no need to update')
+      return 
+    end
     lastAttacker = attack.attacker
   end
 end)

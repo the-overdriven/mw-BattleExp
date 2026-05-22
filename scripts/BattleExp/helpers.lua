@@ -21,4 +21,12 @@ local function log(msg, ...)
   end
 end
 
-return { log = log, setDebug = function(val) DEBUG = val end }
+local function countTruthyValues(followerIds)
+  local count = 0
+  for _, v in pairs(followerIds) do
+    if v then count = count + 1 end
+  end
+  return count
+end
+
+return { log = log, setDebug = function(val) DEBUG = val end, countTruthyValues }

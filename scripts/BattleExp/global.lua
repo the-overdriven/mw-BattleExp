@@ -87,13 +87,6 @@ local DEBUG = settings:get('debug')
 H.setDebug(DEBUG)
 
 local playerFollowers = storage.globalSection('PlayerFollowers')
-local function countFollowers(followerIds)
-  local count = 0
-  for _, v in pairs(followerIds) do
-    if v then count = count + 1 end
-  end
-  return count
-end
 
 return {
   eventHandlers = {
@@ -113,7 +106,7 @@ return {
           followerIds[id] = true
         end
         playerFollowers:set('all', followerIds)
-        log('Cached %d follower IDs', countFollowers(followerIds) or 0)
+        log('Cached %d follower IDs', H.countTruthyValues(followerIds) or 0)
       end
     end,
   }

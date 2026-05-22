@@ -117,6 +117,11 @@ local function isPlayerAlly(actor)
   end
 
   local followersAll = playerFollowers:get('all')
+  if not H.countTruthyValues(followersAll) then
+    log('FDU registers no player followers')
+    return false
+  end
+
   log('is %s player\'s follower? %s', getActorName(actor), followersAll and followersAll[actor.id])
 
   if followersAll[actor.id] then

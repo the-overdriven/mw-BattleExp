@@ -219,16 +219,14 @@ return {
       end
       log(string.format('lastAttacker: %s', tostring(getActorName(lastAttacker))))
 
-      local isKillerPlayer = types.Player.objectIsInstance(lastAttacker)
-      local isKillerPlayerAlly = not isKillerPlayer and isPlayerAlly(lastAttacker)
-      log(string.format('isKillerPlayer: %s', tostring(isKillerPlayer)))
-      log(string.format('isKillerPlayerAlly: %s', tostring(isKillerPlayerAlly)))
-      if not isKillerPlayer and not isKillerPlayerAlly then
+      local isKillerPlayerOrAlly = types.Player.objectIsInstance(lastAttacker)
+      log(string.format('isKillerPlayerOrAlly: %s', tostring(isKillerPlayerOrAlly)))
+      if not isKillerPlayerOrAlly then
         log('Killer is not player or ally, skipping...')
         return
       end
 
-      if isKillerPlayer then
+      if isKillerPlayerOrAlly then
         lastAttacker:sendEvent('GrantBattleExp', payload)
       else
         for _, actor in ipairs(nearby.actors) do

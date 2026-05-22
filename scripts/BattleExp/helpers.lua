@@ -29,4 +29,4 @@ local function countTruthyValues(followerIds)
   return count
 end
 
-return { log = log, setDebug = function(val) DEBUG = val end, countTruthyValues }
+return { log = log, setDebug = function(val) DEBUG = val end, countTruthyValues = countTruthyValues }

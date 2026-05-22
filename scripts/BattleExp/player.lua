@@ -10,7 +10,6 @@ local player = require('openmw.self')
 local SF = require('openmw.interfaces').SkillFramework
 local storage = require('openmw.storage')
 local core = require('openmw.core')
--- local followers = require('openmw.storage').globalSection('PlayerFollowers')
 
 local H = require('scripts/BattleExp/helpers')
 local log = H.log
@@ -149,11 +148,11 @@ SP.addSkillUsedHandler(function(skillId, params)
 
         if otherSkillLevel >= 50 then return end
 
-        -- Level 5: 0.05 (5%)
-        -- Level 6: 0.0347 (3.5%)
-        -- Level 10: 0.0125 (1.25%)
-        -- Level 25: 0.002 (0.2%)
-        -- Level 49: ≈ 0.00052 (0.05%)
+        -- Level 5: 0.05 (+5%)
+        -- Level 6: 0.0347 (+3.5%)
+        -- Level 10: 0.0125 (+1.25%)
+        -- Level 25: 0.002 (+0.2%)
+        -- Level 49: ≈ 0.00052 (+0.05%)
         local synergicExpProgressBonus = 0.05 * (5 / otherSkillLevel) ^ 2
 
         log('synergically training: %s (level: %s, progress: %s, bonus: %s)', 

@@ -109,23 +109,11 @@ local function checkAndCachePlayerSummon()
   core.sendGlobalEvent('RegisterPlayerSummon', self.object)
 end
 
-I.Combat.addOnHitHandler(function(attack)
-  log('addOnHitHandler')
-  if attack.attacker then
-    log('%s was hit by %s', getActorName(self.object), getActorName(attack.attacker))
-    local playerObj = findPlayer()
-    if lastAttacker and lastAttacker.id == playerObj.id then 
-      log('player already hit this actor, no need to update')
-      return 
-    end
-    lastAttacker = attack.attacker
-  end
-end)
-
 local function isPlayerAlly(actor)
   -- old way
   if summons:get(actor.id) then 
-    log('The killer, %s is player\'s summon!', getActorName(actor))
+    log('%s is player\'s summon!', getActorName(actor))
+    return true
   end
 
   local followersAll = playerFollowers:get('all')
@@ -153,6 +141,28 @@ local function updateFollowerStatus(data)
     wasFollower = data.followers[self.id] and data.followers[self.id].followsPlayer or false    
   end
 end
+
+I.Combat.addOnHitHandler(function(attack)
+  log('addOnHitHandler')
+  if attack.attacker then
+    log('%s was hit by %s', getActorName(self.object), getActorName(attack.attacker))
+    local playerObj = findPlayer()
+    if lastAttacker and lastAttacker.id == playerObj.id then 
+      log('player or player ally already hit this actor, no need to update')
+      return 
+    end
+
+    if not isPlayerAlly(attack.attacker) then
+      lastAttacker = attack.attacker
+      return
+    end
+
+    -- our summons or controlled creatures can disappear, 
+    -- so we need to transfer credit to player before enemy dies
+    log('player ally hit this actor, the credit will go to player')
+    lastAttacker = findPlayer() -- player ally credit goes to player
+  end
+end)
 
 return {
   engineHandlers = {
@@ -195,7 +205,7 @@ return {
             break
           end
         end
-        log('No lastAttacker!')
+        log('lastAttacker unknown!')
         return
       end
       if not lastAttacker.isValid then

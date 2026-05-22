@@ -83,8 +83,6 @@ local function calcMaxHP(endurance)
 end
 
 local function setHealthFromEndurance()
-  local types = require('openmw.types')
-  local player = require('openmw.self')
   local e = types.Actor.stats.attributes.endurance(player).base
   local newMaxHP = calcMaxHP(e)
   local health = types.Actor.stats.dynamic.health(player)
@@ -146,25 +144,25 @@ SP.addSkillUsedHandler(function(skillId, params)
         local otherSkill = types.NPC.stats.skills[otherSkillId](player)
         local otherSkillLevel = otherSkill.base
 
-        if otherSkillLevel >= 50 then return end
+        if otherSkillLevel < 50 then
+          -- Level 5: 0.05 (+5%)
+          -- Level 6: 0.0347 (+3.5%)
+          -- Level 10: 0.0125 (+1.25%)
+          -- Level 25: 0.002 (+0.2%)
+          -- Level 49: ≈ 0.00052 (+0.05%)
+          local synergicExpProgressBonus = 0.05 * (5 / otherSkillLevel) ^ 2
 
-        -- Level 5: 0.05 (+5%)
-        -- Level 6: 0.0347 (+3.5%)
-        -- Level 10: 0.0125 (+1.25%)
-        -- Level 25: 0.002 (+0.2%)
-        -- Level 49: ≈ 0.00052 (+0.05%)
-        local synergicExpProgressBonus = 0.05 * (5 / otherSkillLevel) ^ 2
+          log('synergically training: %s (level: %s, progress: %s, bonus: %s)', 
+            otherSkillId, otherSkillLevel, otherSkill.progress, synergicExpProgressBonus)
 
-        log('synergically training: %s (level: %s, progress: %s, bonus: %s)', 
-          otherSkillId, otherSkillLevel, otherSkill.progress, synergicExpProgressBonus)
-
-        if otherSkill.progress + synergicExpProgressBonus >= 1 then
-          -- granting xp would trigger a level up
-          otherSkill.base = otherSkillLevel + 1
-          otherSkill.progress = 0 -- reset progress after level up
-        else
-          -- we can't use SP.skillUsed because we don't want infinite loop
-          otherSkill.progress = otherSkill.progress + synergicExpProgressBonus
+          if otherSkill.progress + synergicExpProgressBonus >= 1 then
+            -- granting xp would trigger a level up
+            otherSkill.base = otherSkillLevel + 1
+            otherSkill.progress = 0 -- reset progress after level up
+          else
+            -- we can't use SP.skillUsed because we don't want infinite loop
+            otherSkill.progress = otherSkill.progress + synergicExpProgressBonus
+          end
         end
       end
     end
@@ -291,50 +289,47 @@ return {
         return
       end
 
-      if types.Actor.getStance(self) == types.Actor.STANCE.Spell then
-        log('Player used enchanted item, scroll or spell')
-        local spell = types.Actor.getSelectedSpell(self)
-        local item = types.Actor.getSelectedEnchantedItem(self)
+      log('Player used enchanted item, scroll or spell')
+      local spell = types.Actor.getSelectedSpell(self)
+      local item = types.Actor.getSelectedEnchantedItem(self)
 
-        -- Absorb Health from Mysticism school is destructive as well
-        if spell then
-          log('Player used spell %s', spell.name)
-          local spellRecord = core.magic.spells.records[spell.id]
-          if spellRecord and spellRecord.effects then
-            for i, effect in ipairs(spellRecord.effects) do
-              local magicEffect = core.magic.effects.records[effect.id]
+      -- Absorb Health from Mysticism school is destructive as well
+      if spell then
+        log('Player used spell %s', spell.name)
+        local spellRecord = core.magic.spells.records[spell.id]
+        if spellRecord and spellRecord.effects then
+          for i, effect in ipairs(spellRecord.effects) do
+            local magicEffect = core.magic.effects.records[effect.id]
 
-              if (magicEffect.name == 'Absorb Health') then
-                  log('it has Absorb Health effect')
-                  local timeNow = os.time()
-                  timeLastDestructiveMagicUse = timeNow
-                  break
-              end
-            end
-          end
-          return
-        end
-
-        if item then
-          log('Player used enchanted item or scroll')
-        end
-
-        log('item.recordId: %s', tostring(item.recordId))
-
-        local enchantment = getItemEnchantment(item)
-        if enchantment then
-          for _, effect in pairs(enchantment.effects) do
-              local magicEffect = core.magic.effects.records[effect.id]
-              local magicSchool = magicEffect.school
-              log('magic effect id: %s', effect.id)
-              log('magic effect school: %s', magicSchool)
-
-              if magicSchool == 'destruction' then
-                log('Player wrecks havoc with magic item or scroll')
+            if (magicEffect.name == 'Absorb Health') then
+                log('it has Absorb Health effect')
                 local timeNow = os.time()
                 timeLastDestructiveMagicUse = timeNow
-              break
+                break
             end
+          end
+        end
+        return
+      end
+
+      if item then
+        log('Player used enchanted item or scroll')
+        log('item.recordId: %s', tostring(item.recordId))
+      end
+
+      local enchantment = getItemEnchantment(item)
+      if enchantment then
+        for _, effect in pairs(enchantment.effects) do
+            local magicEffect = core.magic.effects.records[effect.id]
+            local magicSchool = magicEffect.school
+            log('magic effect id: %s', effect.id)
+            log('magic effect school: %s', magicSchool)
+
+            if magicSchool == 'destruction' then
+              log('Player wrecks havoc with magic item or scroll')
+              local timeNow = os.time()
+              timeLastDestructiveMagicUse = timeNow
+            break
           end
         end
       end

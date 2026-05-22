@@ -22,6 +22,7 @@ local function log(msg, ...)
 end
 
 local function countTruthyValues(followerIds)
+  if not followerIds then return 0 end
   local count = 0
   for _, v in pairs(followerIds) do
     if v then count = count + 1 end

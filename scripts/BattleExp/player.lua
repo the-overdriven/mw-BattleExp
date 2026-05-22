@@ -268,6 +268,8 @@ end
 return {
   engineHandlers = {
     onLoad = function()
+      core.sendGlobalEvent('ClearAllPlayerSummons')
+      core.sendGlobalEvent('ClearAllPlayerFollowers')      
       setHealthFromEndurance()
     end,
     onActive = function()

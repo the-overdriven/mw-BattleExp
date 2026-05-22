@@ -112,12 +112,12 @@ end
 local function isPlayerAlly(actor)
   -- old way
   if summons:get(actor.id) then 
-    log('%s is player\'s summon!', getActorName(actor))
+    log('%s is player\'s summon! actor.id: %s', getActorName(actor), tostring(actor.id))
     return true
   end
 
   local followersAll = playerFollowers:get('all')
-  if not H.countTruthyValues(followersAll) then
+  if not followersAll or not H.countTruthyValues(followersAll) then
     log('FDU registers no player followers')
     return false
   end
@@ -181,12 +181,13 @@ return {
       local payload = { level = enemyLevel, name = enemyName }
       log(string.format('"Died" event fired for %s', tostring(enemyName)))
 
-      -- Display all player followers
       log('=== All Followers ===')
       local followersAll = playerFollowers:get('all')
-      for id, isFollower in pairs(followersAll) do
-        if isFollower then
-          log('Follower ID: %s', tostring(id))
+      if followersAll then
+        for id, isFollower in pairs(followersAll) do
+          if isFollower then
+            log('Follower ID: %s', tostring(id))
+          end
         end
       end
       log('=== End Followers ===')

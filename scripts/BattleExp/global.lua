@@ -98,6 +98,16 @@ return {
       log('UnregisterPlayerSummon event: %s', tostring(actor.id))
       summons:delete(actor.id)
     end,
+    ClearAllPlayerSummons = function(actor)
+      log('Clearing all player summons. Summon count: %s', H.countTruthyValues(summons:asTable()) or 0)
+      summons:reset()
+      log('Cleared all player summons. Summon count: %s', H.countTruthyValues(summons:asTable()) or 0)
+    end,
+    ClearAllPlayerFollowers = function(actor)
+      log('Clearing all player followers. Follower count: %s', H.countTruthyValues(playerFollowers:asTable()) or 0)
+      playerFollowers:reset()
+      log('Cleared all player followers. Follower count: %s', H.countTruthyValues(playerFollowers:asTable()) or 0)
+    end,
     FDU_UpdateFollowerListFromPlayer = function(data)
       log('FDU_UpdateFollowerListFromPlayer event fired')
       if data and data.followers then

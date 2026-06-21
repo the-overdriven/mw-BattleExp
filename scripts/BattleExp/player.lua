@@ -12,6 +12,7 @@ local storage = require('openmw.storage')
 local core = require('openmw.core')
 
 local H = require('scripts/BattleExp/helpers')
+local followers = require('scripts/BattleExp/followers')
 local log = H.log
 
 local settings = storage.globalSection('SettingsBattleExp')
@@ -359,6 +360,3 @@ return {
     end,
   }
 }
-
--- TODO:
--- level armor while moving (like MWSE Armor Training)

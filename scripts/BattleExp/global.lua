@@ -97,6 +97,7 @@ return {
     UnregisterPlayerSummon = function(actor)
       log('UnregisterPlayerSummon event: %s', tostring(actor.id))
       summons:delete(actor.id)
+      summons:set(actor.id, nil)
     end,
     ClearAllPlayerSummons = function(actor)
       log('Clearing all player summons. Summon count: %s', H.countTruthyValues(summons:asTable()) or 0)

@@ -86,7 +86,8 @@ local settings = storage.globalSection('SettingsBattleExp')
 local DEBUG = settings:get('debug')
 H.setDebug(DEBUG)
 
-local playerFollowers = storage.globalSection('PlayerFollowers')
+local storagePlayerFollowers = storage.globalSection('PlayerFollowers')
+local storagePlayerBattleExp = storage.globalSection('BattleExp')
 
 return {
   eventHandlers = {
@@ -95,8 +96,8 @@ return {
       summons:set(actor.id, true)
     end,
     UnregisterPlayerSummon = function(actor)
-      log('UnregisterPlayerSummon event: %s', tostring(actor.id))
       summons:delete(actor.id)
+      log('UnregisterPlayerSummon event: %s', tostring(actor.id))
       summons:set(actor.id, nil)
     end,
     ClearAllPlayerSummons = function(actor)
@@ -105,20 +106,28 @@ return {
       log('Cleared all player summons. Summon count: %s', H.countTruthyValues(summons:asTable()) or 0)
     end,
     ClearAllPlayerFollowers = function(actor)
-      log('Clearing all player followers. Follower count: %s', H.countTruthyValues(playerFollowers:asTable()) or 0)
-      playerFollowers:reset()
-      log('Cleared all player followers. Follower count: %s', H.countTruthyValues(playerFollowers:asTable()) or 0)
+      log('Clearing all player followers. Follower count: %s', H.countTruthyValues(storagePlayerFollowers:asTable()) or 0)
+      storagePlayerFollowers:reset()
+      log('Cleared all player followers. Follower count: %s', H.countTruthyValues(storagePlayerFollowers:asTable()) or 0)
     end,
     FDU_UpdateFollowerListFromPlayer = function(data)
       log('FDU_UpdateFollowerListFromPlayer event fired')
       if data and data.followers then
         local followerIds = {}
-        for id, follower in pairs(data.followers) do
-          followerIds[id] = true
+        for memoryAddressId, follower in pairs(data.followers) do
+          for memoryAddressId, followerTable in pairs(data.followers) do
+            if followerTable.actor and followerTable.actor.recordId then
+              followerIds[followerTable.actor.recordId] = true
+            end
+          end
         end
-        playerFollowers:set('all', followerIds)
+        storagePlayerFollowers:set('all', followerIds)
         log('Cached %d follower IDs', H.countTruthyValues(followerIds) or 0)
       end
     end,
+    storePlayerBattleExp = function(data)
+      log('storePlayerBattleExp %s', data)
+            storagePlayerBattleExp:set('playerLevel', data)
+        end
   }
 }

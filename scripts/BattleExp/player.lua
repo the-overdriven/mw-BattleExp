@@ -10,12 +10,15 @@ local player = require('openmw.self')
 local SF = require('openmw.interfaces').SkillFramework
 local storage = require('openmw.storage')
 local core = require('openmw.core')
+local nearby = require('openmw.nearby')
 
 local H = require('scripts/BattleExp/helpers')
 local followers = require('scripts/BattleExp/followers')
 local log = H.log
 
 local settings = storage.globalSection('SettingsBattleExp')
+local storagePlayerFollowers = storage.globalSection('PlayerFollowers')
+local storagePlayerBattleExp = storage.globalSection('BattleExp')
 local DEBUG = settings:get('debug')
 H.setDebug(DEBUG)
 
@@ -110,9 +113,16 @@ local meleeSkills = {
 
 local SP = require('openmw.interfaces').SkillProgression
 SP.addSkillLevelUpHandler(function(skillId, source, options)
-  -- prevent leveling up character  
+  -- prevent leveling up character when leveling vanilla skills
   if settings:get('disableLevel') then
     options.levelUpProgress = 0
+  end
+end)
+SF.addSkillLevelUpHandler(function(leveledSkillId, source, options)
+  if skillIdBattleExp:lower() == leveledSkillId:lower() then
+    -- Battle Exp skill leveled up
+    log('Battle Exp leveled up, level: %s', statBattleExp.base)
+    followers.onPlayerBattleExpLevelUp(statBattleExp.base, storagePlayerFollowers:get('all'), nearby.actors)
   end
 end)
 
@@ -266,12 +276,18 @@ local function GrantBattleExp(data)
   end
 end
 
+SF.addSkillStatChangedHandler(function(skillId, oldStat, newStat)
+  -- triggered on progress change, not on level up
+end)
+
 return {
   engineHandlers = {
     onLoad = function()
       core.sendGlobalEvent('ClearAllPlayerSummons')
       core.sendGlobalEvent('ClearAllPlayerFollowers')      
       setHealthFromEndurance()
+      -- storagePlayerBattleExp:set('currentLevel', skillStat.base)
+      core.sendGlobalEvent('storePlayerBattleExp', skillStat.base)
     end,
     onActive = function()
       setHealthFromEndurance()
@@ -343,6 +359,7 @@ return {
     if not data.newMode then
       -- UI was just closed (rest, char sheet, etc.)
       setHealthFromEndurance()
+      -- TODO: print msg
       end
     end,
     GrantBattleExpConditionally = function(data)
@@ -355,8 +372,8 @@ return {
     end,
     GrantBattleExp = GrantBattleExp,
     FDU_UpdateFollowerList = function(data)
-        log('FDU_UpdateFollowerList')
-        core.sendGlobalEvent('FDU_UpdateFollowerListFromPlayer', data)
-    end,
+      log('FDU_UpdateFollowerList')
+      core.sendGlobalEvent('FDU_UpdateFollowerListFromPlayer', data)
+    end
   }
 }

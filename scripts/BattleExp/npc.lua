@@ -5,12 +5,16 @@ local I = require('openmw.interfaces')
 local core = require('openmw.core')
 local storage = require('openmw.storage')
 local summons = storage.globalSection('BattleExpSummons')
+local SF = require('openmw.interfaces').SkillFramework
 
 local wasFollower = I.FollowerDetectionUtil.getState().followsPlayer
-local playerFollowers = storage.globalSection('PlayerFollowers')
+local storagePlayerFollowers = storage.globalSection('PlayerFollowers')
+local storagePlayerBattleExp = storage.globalSection('BattleExp')
+local followers = require('scripts/BattleExp/followers')
 
 local H = require('scripts/BattleExp/helpers')
 local log = H.log
+local findPlayer = H.findPlayer
 
 local settings = storage.globalSection('SettingsBattleExp')
 local DEBUG = settings:get('debug')
@@ -18,15 +22,6 @@ H.setDebug(DEBUG)
 
 local isThisActorPlayerSummon = false
 local lastAttacker = nil
-
-local function findPlayer()
-  for _, actor in ipairs(nearby.actors) do
-    if types.Player.objectIsInstance(actor) then
-      return actor
-    end
-  end
-  return nil
-end
 
 local function getPlayerActiveSummonEffects(playerObj)
   local summonEffects = {}
@@ -48,7 +43,7 @@ local function getActorName(object)
 end
 
 local function checkAndCachePlayerSummon()
-  local playerObj = findPlayer()
+  local playerObj = findPlayer(nearby.actors)
   if not playerObj then
     log('no player found')
     return
@@ -116,7 +111,7 @@ local function isPlayerAlly(actor)
     return true
   end
 
-  local followersAll = playerFollowers:get('all')
+  local followersAll = storagePlayerFollowers:get('all')
   if not followersAll or not H.countTruthyValues(followersAll) then
     log('FDU registers no player followers')
     return false
@@ -142,16 +137,26 @@ local function updateFollowerStatus(data)
   local health = types.Actor.stats.dynamic.health(self.object).current
   log('wasFollower updated! %s health: %s', getActorName(self.object), health)
 
-  if health > 0 then
-    wasFollower = data.followers[self.id] and data.followers[self.id].followsPlayer or false    
+  if not (health > 0) then
+    return
   end
+
+  wasFollower = data.followers[self.id] and data.followers[self.id].followsPlayer or false    
+
+  if not wasFollower then
+    return
+  end
+
+  playerBattleExpLevel = storagePlayerBattleExp:get('playerLevel')
+
+  followers.onFollowerRecruited(self, playerBattleExpLevel)
 end
 
 I.Combat.addOnHitHandler(function(attack)
   log('addOnHitHandler')
   if attack.attacker then
     log('%s was hit by %s', getActorName(self.object), getActorName(attack.attacker))
-    local playerObj = findPlayer()
+    local playerObj = findPlayer(nearby.actors)
     if lastAttacker and lastAttacker.id == playerObj.id then 
       log('player or player ally already hit this actor, no need to update')
       return 
@@ -165,7 +170,7 @@ I.Combat.addOnHitHandler(function(attack)
     -- our summons or controlled creatures can disappear, 
     -- so we need to transfer credit to player before enemy dies
     log('player ally hit this actor, the credit will go to player')
-    lastAttacker = findPlayer() -- player ally credit goes to player
+    lastAttacker = findPlayer(nearby.actors) -- player ally credit goes to player
   end
 end)
 
@@ -175,6 +180,10 @@ return {
   },
   eventHandlers = {
     FDU_UpdateFollowerList = updateFollowerStatus,
+    SyncLevelEvent = function(data)
+          log('SyncLevelEvent')
+            followers.syncFollowerToTargetLevel(self, data.targetFollowerLevel)
+        end,
     Died = function()
       local enemyName = getActorName(self.object)
       local enemyLevel = types.Actor.stats.level(self.object).current
@@ -182,7 +191,7 @@ return {
       log(string.format('"Died" event fired for %s', tostring(enemyName)))
 
       log('=== All Followers ===')
-      local followersAll = playerFollowers:get('all')
+      local followersAll = storagePlayerFollowers:get('all')
       if followersAll then
         for id, isFollower in pairs(followersAll) do
           if isFollower then

@@ -1,3 +1,5 @@
+local types = require('openmw.types')
+
 local function log(msg, ...)
   if not DEBUG then return end
   local args = { ... }
@@ -30,4 +32,18 @@ local function countTruthyValues(followerIds)
   return count
 end
 
-return { log = log, setDebug = function(val) DEBUG = val end, countTruthyValues = countTruthyValues }
+local function findPlayer(nearbyActors)
+  for _, actor in ipairs(nearbyActors) do
+    if types.Player.objectIsInstance(actor) then
+      return actor
+    end
+  end
+  return nil
+end
+
+return { 
+  log = log, 
+  setDebug = function(val) DEBUG = val end, 
+  countTruthyValues = countTruthyValues,
+  findPlayer = findPlayer
+}

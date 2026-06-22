@@ -1,30 +1,30 @@
 -- if you have a follower, advance them automatically when recruiting and when gaining Battle Exp lvl
--- BE skill | advances | followerLevel | HP (new recruit)  | HP (with player since lvl 1)
--- ---------|----------|---------------|-------------------|------------------------------
---    5     |    0     |      1        |        40         |             40
---    6     |    1     |      4        |        55         |             56
---    7     |    2     |      5        |        61         |             63
---    8     |    3     |      6        |        67         |             70
---    9     |    4     |      7        |        73         |             78
---   10     |    5     |      8        |        79         |             85
---   11     |    6     |      9        |        86         |             94
---   12     |    7     |      9        |        86         |             95
---   13     |    8     |     10        |        93         |            104
---   14     |    9     |     11        |       100         |            113
---   15     |   10     |     11        |       100         |            115
---   16     |   11     |     12        |       107         |            124
---   17     |   12     |     12        |       107         |            126
---   18     |   13     |     13        |       114         |            136
---   19     |   14     |     13        |       114         |            138
---   20     |   15     |     14        |       121         |            148
---   25     |   20     |     16        |       137         |            177
---   30     |   25     |     18        |       153         |            208
---   35     |   30     |     19        |       162         |            231
---   40     |   35     |     21        |       180         |            267
---   45     |   40     |     22        |       189         |            293
---   50     |   45     |     23        |       198         |            319
---   55     |   50     |     25        |       217         |            362
---   60     |   55     |     26        |       227         |            392
+-- BE skill | advances | followerLevel | HP (new recruit) | HP (with player since lvl 1)
+-- -------- | -------- | ------------- | ---------------- | ----------------------------
+--        5 |        0 |             1 |               40 |                           40
+--        6 |        1 |             4 |               55 |                           56
+--        7 |        2 |             5 |               61 |                           63
+--        8 |        3 |             6 |               67 |                           70
+--        9 |        4 |             7 |               73 |                           78
+--       10 |        5 |             8 |               79 |                           85
+--       11 |        6 |             9 |               86 |                           94
+--       12 |        7 |             9 |               86 |                           95
+--       13 |        8 |            10 |               93 |                          104
+--       14 |        9 |            11 |              100 |                          113
+--       15 |       10 |            11 |              100 |                          115
+--       16 |       11 |            12 |              107 |                          124
+--       17 |       12 |            12 |              107 |                          126
+--       18 |       13 |            13 |              114 |                          136
+--       19 |       14 |            13 |              114 |                          138
+--       20 |       15 |            14 |              121 |                          148
+--       25 |       20 |            16 |              137 |                          177
+--       30 |       25 |            18 |              153 |                          208
+--       35 |       30 |            19 |              162 |                          231
+--       40 |       35 |            21 |              180 |                          267
+--       45 |       40 |            22 |              189 |                          293
+--       50 |       45 |            23 |              198 |                          319
+--       55 |       50 |            25 |              217 |                          362
+--       60 |       55 |            26 |              227 |                          392
 -- examples in the table assume the follower NPC join the player on lvl 1-3 with 40 Endurance and Strength
 -- these are extreme cases, most NPC start with higher lvls and it pays off to recruit them early game
 
@@ -39,13 +39,13 @@ local settings = storage.globalSection('SettingsBattleExp')
 
 -- scales follower level with the player's Battle Exp skill level (see table above)
 local function calculateTargetFollowerLevel(battleExpLevel)
-  local advances = battleExpLevel - 5
+  local playerBattleExpAdvances = battleExpLevel - 5
 
-  if advances <= 0 then
+  if playerBattleExpAdvances <= 0 then
     return 1
   end
 
-  return 1 + math.floor(3.4 * math.sqrt(advances))
+  return 1 + math.floor(3.4 * math.sqrt(playerBattleExpAdvances))
 end
 
 local function trainFollowerOnce(npc)

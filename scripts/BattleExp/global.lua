@@ -63,6 +63,20 @@ I.Settings.registerGroup({
             default     = false,
         },
         {
+            key         = 'followerLeveling',
+            renderer    = 'checkbox',
+            name        = 'Follower Leveling',
+            description = 'NPC companions gain levels, skills, attributes, and HP proportionally to our current Battle Exp skill level (updated automatically).',
+            default     = true,
+        },
+        {
+            key         = 'rewardLongTermFollowers',
+            renderer    = 'checkbox',
+            name        = 'Reward long-term followers',
+            description = 'On each Battle Exp advance, every follower present in the party at that moment receives 1 bonus Endurance point.',
+            default     = true,
+        },
+        {
             key         = 'debug',
             renderer    = 'checkbox',
             name        = 'Debug mode',
@@ -80,7 +94,7 @@ local H = require('scripts/BattleExp/helpers')
 local log = H.log
 
 local storage = require('openmw.storage')
-local summons = storage.globalSection('BattleExpSummons')
+local storageSummons = storage.globalSection('BattleExpSummons')
 
 local settings = storage.globalSection('SettingsBattleExp')
 local DEBUG = settings:get('debug')
@@ -93,17 +107,17 @@ return {
   eventHandlers = {
     RegisterPlayerSummon = function(actor)
       log('RegisterPlayerSummon event: %s', tostring(actor.id))
-      summons:set(actor.id, true)
+      storageSummons:set(actor.id, true)
     end,
     UnregisterPlayerSummon = function(actor)
-      summons:delete(actor.id)
+      storageSummons:delete(actor.id)
       log('UnregisterPlayerSummon event: %s', tostring(actor.id))
-      summons:set(actor.id, nil)
+      storageSummons:set(actor.id, nil)
     end,
     ClearAllPlayerSummons = function(actor)
-      log('Clearing all player summons. Summon count: %s', H.countTruthyValues(summons:asTable()) or 0)
-      summons:reset()
-      log('Cleared all player summons. Summon count: %s', H.countTruthyValues(summons:asTable()) or 0)
+      log('Clearing all player summons. Summon count: %s', H.countTruthyValues(storageSummons:asTable()) or 0)
+      storageSummons:reset()
+      log('Cleared all player summons. Summon count: %s', H.countTruthyValues(storageSummons:asTable()) or 0)
     end,
     ClearAllPlayerFollowers = function(actor)
       log('Clearing all player followers. Follower count: %s', H.countTruthyValues(storagePlayerFollowers:asTable()) or 0)
@@ -126,8 +140,9 @@ return {
       end
     end,
     storePlayerBattleExp = function(data)
-      log('storePlayerBattleExp %s', data)
-            storagePlayerBattleExp:set('playerLevel', data)
-        end
+      -- Skill Framework doesn't allow reading player's skill level outside of player scope, so we store it globally
+      -- log('storePlayerBattleExp %s', data)
+      storagePlayerBattleExp:set('playerLevel', data)
+    end
   }
 }

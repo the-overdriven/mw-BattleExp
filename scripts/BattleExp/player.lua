@@ -8,18 +8,19 @@ local I = require('openmw.interfaces')
 local types = require('openmw.types')
 local player = require('openmw.self')
 local SF = require('openmw.interfaces').SkillFramework
-local storage = require('openmw.storage')
 local core = require('openmw.core')
 local nearby = require('openmw.nearby')
 
-local H = require('scripts/BattleExp/helpers')
 local followers = require('scripts/BattleExp/followers')
-local log = H.log
 
+local storage = require('openmw.storage')
 local settings = storage.globalSection('SettingsBattleExp')
 local storagePlayerFollowers = storage.globalSection('PlayerFollowers')
 local storagePlayerBattleExp = storage.globalSection('BattleExp')
 local DEBUG = settings:get('debug')
+
+local H = require('scripts/BattleExp/helpers')
+local log = H.log
 H.setDebug(DEBUG)
 
 if not SF then
@@ -28,7 +29,7 @@ end
 
 local skillIdBattleExp = 'battle_experience'
 local useTypes = { Kill = 1 }
-timeLastDestructiveMagicUse = 0 -- os.time() of last Destruction or Enchant skill XP gain
+timeLastDestructiveMagicUse = 0 -- os.time() of last destructive spell/item/scroll use
 
 SF.registerSkill(skillIdBattleExp, {
   name = 'Battle Experience',
@@ -74,7 +75,7 @@ local function growEndurance(amount)
   local endurance = types.Actor.stats.attributes.endurance(player)
   local newVal = endurance.base + amount
   endurance.base = newVal
-  log('Endurance increased to %d due to BattleExp', newVal)
+  log('Player\'s Endurance increased to %d (due to BattleExp advance)', newVal)
 end
 
 -- HP formula: e + (e^2 / 100)
@@ -119,9 +120,11 @@ SP.addSkillLevelUpHandler(function(skillId, source, options)
   end
 end)
 SF.addSkillLevelUpHandler(function(leveledSkillId, source, options)
+  -- custom skill leveled up
   if skillIdBattleExp:lower() == leveledSkillId:lower() then
     -- Battle Exp skill leveled up
     log('Battle Exp leveled up, level: %s', statBattleExp.base)
+    if not settings:get('followerLeveling') then return end
     followers.onPlayerBattleExpLevelUp(statBattleExp.base, storagePlayerFollowers:get('all'), nearby.actors)
   end
 end)

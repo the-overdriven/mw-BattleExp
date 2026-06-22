@@ -3,11 +3,11 @@ local types = require('openmw.types')
 local self = require('openmw.self')
 local I = require('openmw.interfaces')
 local core = require('openmw.core')
-local storage = require('openmw.storage')
-local summons = storage.globalSection('BattleExpSummons')
 local SF = require('openmw.interfaces').SkillFramework
-
 local wasFollower = I.FollowerDetectionUtil.getState().followsPlayer
+
+local storage = require('openmw.storage')
+local storageSummons = storage.globalSection('BattleExpSummons')
 local storagePlayerFollowers = storage.globalSection('PlayerFollowers')
 local storagePlayerBattleExp = storage.globalSection('BattleExp')
 local followers = require('scripts/BattleExp/followers')
@@ -106,7 +106,7 @@ end
 
 local function isPlayerAlly(actor)
   -- old way
-  if summons:get(actor.id) then 
+  if storageSummons:get(actor.id) then 
     log('%s is player\'s summon! actor.id: %s', getActorName(actor), tostring(actor.id))
     return true
   end
@@ -181,9 +181,13 @@ return {
   eventHandlers = {
     FDU_UpdateFollowerList = updateFollowerStatus,
     SyncLevelEvent = function(data)
-          log('SyncLevelEvent')
-            followers.syncFollowerToTargetLevel(self, data.targetFollowerLevel)
-        end,
+      if not settings:get('followerLeveling') then return end
+      log('SyncLevelEvent')
+      followers.syncFollowerToTargetLevel(self, data.targetFollowerLevel)
+    end,
+    GrantFollowerBonusEndurance = function(data)
+      followers.grantBonusEndurance(self)
+    end,
     Died = function()
       local enemyName = getActorName(self.object)
       local enemyLevel = types.Actor.stats.level(self.object).current

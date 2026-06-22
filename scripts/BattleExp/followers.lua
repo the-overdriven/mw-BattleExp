@@ -18,7 +18,7 @@
 --   19     |   14     |     13
 --   20     |   15     |     14
 --   25     |   20     |     16
---   30     |   25     |     17
+--   30     |   25     |     18
 --   35     |   30     |     19
 --   40     |   35     |     21
 --   45     |   40     |     22
@@ -31,7 +31,7 @@ local H = require('scripts/BattleExp/helpers')
 local log = H.log
 local findPlayer = H.findPlayer
 
--- maps player's Battle Exp skill level to the level the follower will be advanced to (see table above)
+-- scales follower level with the player's Battle Exp skill level (see table above)
 local function calculateTargetFollowerLevel(battleExpLevel)
   local advances = battleExpLevel - 5
 
@@ -39,11 +39,10 @@ local function calculateTargetFollowerLevel(battleExpLevel)
     return 1
   end
 
-  return 1 + math.floor(3.394 * math.sqrt(advances))
+  return 1 + math.floor(3.4 * math.sqrt(advances))
 end
 
 local function trainFollowerOnce(npc)
-  -- local skills = types.NPC.stats.skills
   local skills = types.NPC.stats.skills
   local attributes = types.Actor.stats.attributes
 
@@ -71,6 +70,8 @@ local function trainFollowerOnce(npc)
     stat.base = stat.base + 1
   end  
 end
+
+-- local function grantHpBonus
 
 local function syncFollowerToTargetLevel(npc, targetFollowerLevel)
   log('syncFollowerToTargetLevel')

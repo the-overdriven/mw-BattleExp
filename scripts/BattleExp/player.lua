@@ -359,7 +359,7 @@ return {
     if not data.newMode then
       -- UI was just closed (rest, char sheet, etc.)
       setHealthFromEndurance()
-      -- TODO: print msg
+      -- TODO: print msg (HP increased from X to Y)
       end
     end,
     GrantBattleExpConditionally = function(data)
@@ -377,3 +377,6 @@ return {
     end
   }
 }
+
+-- TODO: playtesting
+-- TODO: option to exclude follower leveling

@@ -145,10 +145,10 @@ SP.addSkillUsedHandler(function(skillId, params)
   if settings:get('rewardMelee') then
     local meleeBonusExp = getScaledExp(statBattleExp.base, 0.01)
     log('Rewarded Melee use! %s', meleeBonusExp)
-    SF.skillUsed(skillIdBattleExp, {
       skillGain = meleeBonusExp,
       useType = useTypes.Kill
     })
+    statBattleExp.progress = statBattleExp.progress + meleeBonusExp
   end
 
   -- slightly increase all other melee skills for using a melee skill

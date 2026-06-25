@@ -133,6 +133,8 @@ end
 
 local function onPlayerBattleExpLevelUp(newSkillLevel, allFollowers, nearbyActors)
   log('onPlayerBattleExpLevelUp, allFollowers: %s', allFollowers)
+  allFollowers = allFollowers or {}
+  nearbyActors = nearbyActors or {}
   local targetFollowerLevel = calculateTargetFollowerLevel(newSkillLevel)
   
   for recordId, isFollower in pairs(allFollowers) do

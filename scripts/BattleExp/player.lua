@@ -125,7 +125,7 @@ SF.addSkillLevelUpHandler(function(leveledSkillId, source, options)
     -- Battle Exp skill leveled up
     log('Battle Exp leveled up, level: %s', statBattleExp.base)
     if not settings:get('followerLeveling') then return end
-    followers.onPlayerBattleExpLevelUp(statBattleExp.base, storagePlayerFollowers:get('all'), nearby.actors)
+    followers.onPlayerBattleExpLevelUp(statBattleExp.base, storagePlayerFollowers:get('all') or {}, nearby.actors)
   end
 end)
 
@@ -380,3 +380,5 @@ return {
     end
   }
 }
+
+-- TODO: unify settings (BattleExpSettings and SettingsBattleExp)

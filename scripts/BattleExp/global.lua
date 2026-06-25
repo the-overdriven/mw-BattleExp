@@ -42,6 +42,13 @@ I.Settings.registerGroup({
             default     = true,
         },
         {
+            key         = 'showHpNotifications',
+            renderer    = 'checkbox',
+            name        = 'Show HP change notifications',
+            description = 'Displays notification after your max. HP increases.',
+            default     = true,
+        },
+        {
             key         = 'showScaledXp',
             renderer    = 'checkbox',
             name        = 'Show scaled XP in "defeated" notifications',

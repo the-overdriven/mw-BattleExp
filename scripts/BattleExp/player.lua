@@ -30,6 +30,7 @@ end
 local skillIdBattleExp = 'battle_experience'
 local useTypes = { Kill = 1 }
 timeLastDestructiveMagicUse = 0 -- os.time() of last destructive spell/item/scroll use
+local lastHP = nil
 
 SF.registerSkill(skillIdBattleExp, {
   name = 'Battle Experience',
@@ -91,14 +92,17 @@ local function setHealthFromEndurance()
   local e = types.Actor.stats.attributes.endurance(player).base
   local newMaxHP = calcMaxHP(e)
   local health = types.Actor.stats.dynamic.health(player)
+
   health.base = newMaxHP
   -- log('Endurance=%d -> MaxHP=%.1f', e, newMaxHP)
+  -- log("RAW HP SET = %.2f", newMaxHP)
+  -- log("ENGINE HP = %s", tostring(health.base))
 end
 
 -- hide character level in char sheet
-local API = require('openmw.interfaces').StatsWindow
-local C = API.Constants
-API.modifyLine(C.DefaultLines.LEVEL, {
+local StatsWindowExtender = require('openmw.interfaces').StatsWindow
+local C = StatsWindowExtender.Constants
+StatsWindowExtender.modifyLine(C.DefaultLines.LEVEL, {
   visibleFn = function()
     return not settings:get('hideLevel')
   end,
@@ -286,7 +290,6 @@ return {
       core.sendGlobalEvent('ClearAllPlayerSummons')
       core.sendGlobalEvent('ClearAllPlayerFollowers')      
       setHealthFromEndurance()
-      -- storagePlayerBattleExp:set('currentLevel', skillStat.base)
       core.sendGlobalEvent('storePlayerBattleExp', skillStat.base)
     end,
     onActive = function()
@@ -354,27 +357,43 @@ return {
       end
     end
   },
-  eventHandlers = {
-    UiModeChanged = function(data)
-    if not data.newMode then
-      -- UI was just closed (rest, char sheet, etc.)
-      setHealthFromEndurance()
-      -- TODO: print msg (HP increased from X to Y)
-      end
-    end,
-    GrantBattleExpConditionally = function(data)
-      -- workaround for hit handler not registering magic kills
-      local timeNow = os.time()
-      local hasUsedDestructiveMagicInLastMinute = timeNow - timeLastDestructiveMagicUse < 60
-      if not hasUsedDestructiveMagicInLastMinute then return end
-      log('GrantBattleExpConditionally (player used destructive magic in last minute)')
-      GrantBattleExp(data)
-    end,
-    GrantBattleExp = GrantBattleExp,
-    FDU_UpdateFollowerList = function(data)
-      log('FDU_UpdateFollowerList')
-      core.sendGlobalEvent('FDU_UpdateFollowerListFromPlayer', data)
+eventHandlers = {
+  UiModeChanged = function(data)
+    if data.newMode then
+      return
     end
+
+    -- UI was just closed (rest, char sheet, etc.)
+    setHealthFromEndurance()
+    local endurance = types.Actor.stats.attributes.endurance(player).base
+    local newHP = calcMaxHP(endurance)
+    local oldHP = lastHP or newHP
+    lastHP = newHP
+
+    --log('oldHP: %s, newHP: %s', oldHP, newHP)
+
+    if oldHP ~= newHP and settings:get('showHpNotifications') then
+      ui.showMessage(string.format(
+        "You feel tougher. HP: %d => %d.",
+        oldHP,
+        newHP
+      ))
+    end
+  end,
+  GrantBattleExpConditionally = function(data)
+    -- workaround for hit handler not registering magic kills
+    local timeNow = os.time()
+    local hasUsedDestructiveMagicInLastMinute = timeNow - timeLastDestructiveMagicUse < 60
+    if not hasUsedDestructiveMagicInLastMinute then return end
+
+    log('GrantBattleExpConditionally (player used destructive magic in last minute)')
+    GrantBattleExp(data)
+  end,
+  GrantBattleExp = GrantBattleExp,
+  FDU_UpdateFollowerList = function(data)
+    log('FDU_UpdateFollowerList')
+    core.sendGlobalEvent('FDU_UpdateFollowerListFromPlayer', data)
+  end
   }
 }
 

@@ -110,7 +110,6 @@ return {
       storageSummons:set(actor.id, true)
     end,
     UnregisterPlayerSummon = function(actor)
-      storageSummons:delete(actor.id)
       log('UnregisterPlayerSummon event: %s', tostring(actor.id))
       storageSummons:set(actor.id, nil)
     end,

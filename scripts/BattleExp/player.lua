@@ -380,6 +380,3 @@ return {
     end
   }
 }
-
--- TODO: playtesting
--- TODO: option to exclude follower leveling

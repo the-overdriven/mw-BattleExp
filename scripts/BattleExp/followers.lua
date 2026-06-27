@@ -140,9 +140,12 @@ local function onPlayerBattleExpLevelUp(newSkillLevel, allFollowers, nearbyActor
   for recordId, isFollower in pairs(allFollowers) do
     if isFollower then
       local foundLiveNpc = nil
-      
+
       for _, actor in ipairs(nearbyActors) do
-        if actor.recordId == recordId then
+        -- log('is this actor.id %s our follower? %s', actor.id, recordId)
+
+        -- if actor.recordId == recordId then
+        if actor.id == recordId then
           foundLiveNpc = actor
           break
         end

@@ -137,8 +137,8 @@ return {
         for memoryAddressId, follower in pairs(data.followers) do
           for memoryAddressId, followerTable in pairs(data.followers) do
             if followerTable.actor and followerTable.actor.recordId then
-              -- followerIds[followerTable.actor.recordId] = true
-              followerIds[followerTable.actor.id] = true
+              -- followerIds[followerTable.actor.recordId] = true -- actor ID (prettier)
+              followerIds[followerTable.actor.id] = true -- actor memory ID (not human-readable)
             end
           end
         end

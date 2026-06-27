@@ -134,10 +134,11 @@ end
 
 local function updateFollowerStatus(data)
   -- it does not update on death
-  local health = types.Actor.stats.dynamic.health(self.object).current
-  log('wasFollower updated! %s health: %s', getActorName(self.object), health)
+  local healthCurrent = types.Actor.stats.dynamic.health(self.object).current
+  local healthBase = types.Actor.stats.dynamic.health(self.object).base
+  log('wasFollower updated! %s healthBase: %s', getActorName(self.object), healthBase)
 
-  if not (health > 0) then
+  if not (healthCurrent > 0) then
     return
   end
 

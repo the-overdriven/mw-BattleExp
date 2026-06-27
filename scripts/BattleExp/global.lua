@@ -42,18 +42,18 @@ I.Settings.registerGroup({
             default     = true,
         },
         {
-            key         = 'showHpNotifications',
-            renderer    = 'checkbox',
-            name        = 'Show HP change notifications',
-            description = 'Displays notification after your max. HP increases.',
-            default     = true,
-        },
-        {
             key         = 'showScaledXp',
             renderer    = 'checkbox',
             name        = 'Show scaled XP in "defeated" notifications',
             description = 'Scaled XP is affected by your Battle Experience level and custom scale, base XP depends only on enemy lvl.',
             default     = false,
+        },
+        {
+            key         = 'showHpNotifications',
+            renderer    = 'checkbox',
+            name        = 'Show HP change notifications',
+            description = 'Displays notification after your max. HP increases.',
+            default     = true,
         },
         {
             key         = 'rewardMelee',
@@ -137,7 +137,8 @@ return {
         for memoryAddressId, follower in pairs(data.followers) do
           for memoryAddressId, followerTable in pairs(data.followers) do
             if followerTable.actor and followerTable.actor.recordId then
-              followerIds[followerTable.actor.recordId] = true
+              -- followerIds[followerTable.actor.recordId] = true
+              followerIds[followerTable.actor.id] = true
             end
           end
         end

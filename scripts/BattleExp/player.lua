@@ -396,5 +396,3 @@ eventHandlers = {
   end
   }
 }
-
--- TODO: unify settings (BattleExpSettings and SettingsBattleExp)
